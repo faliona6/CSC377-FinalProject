@@ -8,8 +8,10 @@ using Valve.VR.InteractionSystem;
 public class Gun : MonoBehaviour
 {
     public SteamVR_Action_Boolean fireAction;
-    public ParticleSystem muzzleFlash;
+    //public ParticleSystem muzzleFlash;
     public Transform bulletShooter;
+
+    private SimpleShoot simpleShoot;
 
     private Interactable interactable;
 
@@ -17,6 +19,7 @@ public class Gun : MonoBehaviour
     void Start()
     {
         interactable = GetComponent<Interactable>();
+        simpleShoot = GetComponentInChildren<SimpleShoot>();
     }
 
     // Update is called once per frame
@@ -41,8 +44,10 @@ public class Gun : MonoBehaviour
     private void FireBullet()
     {
         Debug.Log("Shooting Gun");
-        muzzleFlash.Play();
-        StartCoroutine(StopParticles());
+        //muzzleFlash.Play();
+        //StartCoroutine(StopParticles());
+        simpleShoot.Shoot();
+        simpleShoot.gunAnimator.SetTrigger("Fire");
 
         // Shoot raycast
         RaycastHit hit;
@@ -77,6 +82,6 @@ public class Gun : MonoBehaviour
     IEnumerator StopParticles()
     {
         yield return new WaitForSeconds(0.2f);
-        muzzleFlash.Stop();
+        //muzzleFlash.Stop();
     }
 }

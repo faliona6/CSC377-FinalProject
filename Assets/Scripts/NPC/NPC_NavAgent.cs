@@ -15,33 +15,37 @@ public class NPC_NavAgent : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        Vector3 target;
-        if (RandomPoint(transform.position, 30f, out target))
-        {
-            agent.SetDestination(target);
-        }
+        GoToRandomPoint();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (paused)
+        if (paused) { 
+            agent.SetDestination(transform.position);
             return;
+        }
         if (!agent.pathPending && agent.remainingDistance < 0.5f)
         {
             Debug.Log("Choosing new path");
-            Vector3 target;
-            if (RandomPoint(transform.position, 30f, out target)) {
-                agent.SetDestination(target);
-            }
-            StartCoroutine(PauseForSeconds(3));
+            //GoToRandomPoint();
+            StartCoroutine(PauseForSeconds(2));
         }
         UpdateAnimation();
 
+        /*
         ExecuteAction(
             new Action(
                 () => StartCoroutine(PauseForSeconds(3))),
-            0.001f);
+            0.001f);*/
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (paused)
+        {
+            Gizmos.DrawSphere(transform.position, 1);
+        }
     }
 
     private void UpdateAnimation()
@@ -64,14 +68,28 @@ public class NPC_NavAgent : MonoBehaviour
         }
     }
 
+    private void GoToRandomPoint()
+    {
+        Debug.Log("going to random point");
+        Vector3 target;
+        if (RandomPoint(transform.position, 30f, out target))
+        {
+            agent.SetDestination(target);
+        }
+    }
+
     private IEnumerator PauseForSeconds(int seconds)
     {
         Debug.Log("pausing");
         paused = true;
         agent.isStopped = true;
+
         yield return new WaitForSeconds(seconds);
+        Debug.Log("unpausing");
         paused = false;
         agent.isStopped = false;
+        GoToRandomPoint();
+
     }
 
     private bool RandomPoint(Vector3 center, float range, out Vector3 result)
