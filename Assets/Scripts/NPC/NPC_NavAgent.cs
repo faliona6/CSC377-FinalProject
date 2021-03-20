@@ -15,17 +15,21 @@ public class NPC_NavAgent : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        GoToRandomPoint();
+
+        agent.SetDestination(new Vector3(11, 0, 0));
+        //GoToRandomPoint();
     }
 
     // Update is called once per frame
     void Update()
     {
+        Debug.Log(agent.pathPending);
         if (paused) { 
             agent.SetDestination(transform.position);
+
             return;
         }
-        if (!agent.pathPending && agent.remainingDistance < 0.5f)
+        if (!agent.pathPending && agent.remainingDistance < 1.6f)
         {
             Debug.Log("Choosing new path");
             //GoToRandomPoint();
@@ -42,10 +46,11 @@ public class NPC_NavAgent : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        /*
         if (paused)
         {
             Gizmos.DrawSphere(transform.position, 1);
-        }
+        }*/
     }
 
     private void UpdateAnimation()
@@ -82,14 +87,10 @@ public class NPC_NavAgent : MonoBehaviour
     {
         Debug.Log("pausing");
         paused = true;
-        agent.isStopped = true;
-
         yield return new WaitForSeconds(seconds);
         Debug.Log("unpausing");
         paused = false;
-        agent.isStopped = false;
         GoToRandomPoint();
-
     }
 
     private bool RandomPoint(Vector3 center, float range, out Vector3 result)

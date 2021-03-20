@@ -15,6 +15,15 @@ public class Gun : MonoBehaviour
 
     private Interactable interactable;
 
+    public LineRenderer laser;
+    public GameObject dot;
+
+    public GameObject hitEnvironmentParticles, hitPlayerParticles;
+
+    private bool isShooting = false;
+
+    public AudioSource gunShotSfx;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -25,25 +34,48 @@ public class Gun : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        if (fireAction.stateDown)
-        {
-            Debug.Log("shooting");
-        }
         // If gun is grabbed
         if (interactable.attachedToHand != null)
         {
             SteamVR_Input_Sources source = interactable.attachedToHand.handType;
-            if (fireAction[source].stateDown)
+            if (!isShooting && fireAction[source].stateDown)
             {
                 FireBullet();
             }
+            ShowLaser();
+        }
+        else
+        {
+            dot.SetActive(false);
+            laser.gameObject.SetActive(false);
+        }
+    }
+
+    private void ShowLaser()
+    {
+        laser.gameObject.SetActive(true);
+
+        // Shoot raycast
+        RaycastHit hit;
+        if (Physics.Raycast(bulletShooter.position, bulletShooter.TransformDirection(Vector3.forward), out hit, 200f))
+        {
+            laser.SetPosition(0, bulletShooter.position);
+            laser.SetPosition(1, hit.point);
+            dot.SetActive(true);
+            dot.transform.position = hit.point;
+        }
+        else
+        {
+            dot.SetActive(false);
+            laser.SetPosition(0, bulletShooter.position);
+            laser.SetPosition(1, bulletShooter.TransformDirection(Vector3.forward) * 100f);
         }
     }
 
     private void FireBullet()
     {
         Debug.Log("Shooting Gun");
+        gunShotSfx.Play();
         //muzzleFlash.Play();
         //StartCoroutine(StopParticles());
         simpleShoot.Shoot();
@@ -55,17 +87,30 @@ public class Gun : MonoBehaviour
         
         if (Physics.Raycast(bulletShooter.position, bulletShooter.TransformDirection(Vector3.forward), out hit, Mathf.Infinity))
         {
+            GameObject particles = hitEnvironmentParticles;
             if (hit.transform.CompareTag("NPC"))
             {
                 Debug.Log("Hit NPC");
                 HandleNPCHit(hit.transform);
+                particles = hitPlayerParticles;
             }
             if (hit.transform.CompareTag("Player"))
             {
                 Debug.Log("Hit Player");
                 HandlePlayerHit(hit.transform);
+                particles = hitPlayerParticles;
             }
+
+            GameObject impactGO = Instantiate(particles, hit.point, Quaternion.LookRotation(hit.normal));
+            Destroy(impactGO, 2f);
         }
+    }
+
+    private IEnumerator stopShooting()
+    {
+        isShooting = true;
+        yield return new WaitForSeconds(0.1f);
+        isShooting = false;
     }
 
     private void HandleNPCHit(Transform npc)
